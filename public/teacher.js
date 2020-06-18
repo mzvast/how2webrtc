@@ -129,6 +129,8 @@ webrtc.addEventListener("icecandidate", (event) => {
   if (!event.candidate) {
     return;
   }
+  console.log("onIcecandidate", event.candidate);
+  //alert(JSON.stringify(event.candidate));
   sendMessageToSignallingServer({
     channel: "webrtc_ice_candidate",
     candidate: event.candidate,
