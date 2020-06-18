@@ -39,7 +39,7 @@ function showVideoCall() {
 let otherPerson;
 
 const username = prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
-const socketUrl = `ws://${location.host}/ws`;
+const socketUrl = `wss://${location.host}/ws`;
 const socket = new WebSocket(socketUrl);
 
 /**
