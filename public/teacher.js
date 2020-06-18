@@ -38,7 +38,7 @@ function showVideoCall() {
 /** @type {string} */
 let otherPerson;
 
-const username = prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
+const username = `teacher${Math.floor(Math.random() * 100)}`;// prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
 const socketUrl = `ws://${location.host}/ws`;
 const socket = new WebSocket(socketUrl);
 
@@ -142,21 +142,10 @@ webrtc.addEventListener("track", (event) => {
   remoteVideo.srcObject = event.streams[0];
 });
 
-navigator
-  .mediaDevices
-  .getUserMedia({ video: true })
-  .then((localStream) => {
-    /** @type {HTMLVideoElement} */
-    const localVideo = document.getElementById("local-video");
-    localVideo.srcObject = localStream;
 
-    for (const track of localStream.getTracks()) {
-      webrtc.addTrack(track, localStream);
-    }
-  });
 
 callButton.addEventListener("click", async () => {
-  otherPerson = prompt("Who you gonna call?");
+  otherPerson = 'student001';//prompt("Who you gonna call?");
 
   showVideoCall();
   sendMessageToSignallingServer({

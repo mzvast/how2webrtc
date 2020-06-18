@@ -16,7 +16,7 @@ function showElement(element) {
   element.style.display = "";
 }
 
-const callButton = document.getElementById("call-button");
+// const callButton = document.getElementById("call-button");
 const videoContainer = document.getElementById("video-container");
 
 /**
@@ -24,21 +24,21 @@ const videoContainer = document.getElementById("video-container");
  */
 function hideVideoCall() {
   hideElement(videoContainer);
-  showElement(callButton);
+  // showElement(callButton);
 }
 
 /**
  * Shows both local and remote video, and hides the "call" button.
  */
 function showVideoCall() {
-  hideElement(callButton);
+  // hideElement(callButton);
   showElement(videoContainer);
 }
 
 /** @type {string} */
 let otherPerson;
 
-const username = prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
+const username = 'student001'; // prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
 const socketUrl = `ws://${location.host}/ws`;
 const socket = new WebSocket(socketUrl);
 
@@ -75,13 +75,14 @@ async function handleMessage(message) {
       console.log(`receiving call from ${message.with}`);
       otherPerson = message.otherPerson;
       showVideoCall();
-
-      const offer = await webrtc.createOffer();
-      await webrtc.setLocalDescription(offer);
-      sendMessageToSignallingServer({
-        channel: "webrtc_offer",
-        offer,
-        otherPerson,
+      startShareScreen(async()=>{
+        const offer = await webrtc.createOffer();
+        await webrtc.setLocalDescription(offer);
+        sendMessageToSignallingServer({
+          channel: "webrtc_offer",
+          offer,
+          otherPerson,
+        });
       });
       break;
 
@@ -136,15 +137,10 @@ webrtc.addEventListener("icecandidate", (event) => {
   });
 });
 
-webrtc.addEventListener("track", (event) => {
-  /** @type {HTMLVideoElement} */
-  const remoteVideo = document.getElementById("remote-video");
-  remoteVideo.srcObject = event.streams[0];
-});
-
-navigator
+function startShareScreen(cb){
+  navigator
   .mediaDevices
-  .getUserMedia({ video: true })
+  .getDisplayMedia()
   .then((localStream) => {
     /** @type {HTMLVideoElement} */
     const localVideo = document.getElementById("local-video");
@@ -153,16 +149,21 @@ navigator
     for (const track of localStream.getTracks()) {
       webrtc.addTrack(track, localStream);
     }
+    cb&&cb();
+  }).catch(e=>{
+    console.log('user reject share screen')
   });
+}
 
-callButton.addEventListener("click", async () => {
-  otherPerson = prompt("Who you gonna call?");
 
-  showVideoCall();
-  sendMessageToSignallingServer({
-    channel: "start_call",
-    otherPerson,
-  });
-});
+// callButton.addEventListener("click", async () => {
+//   otherPerson = prompt("Who you gonna call?");
+
+//   showVideoCall();
+//   sendMessageToSignallingServer({
+//     channel: "start_call",
+//     otherPerson,
+//   });
+// });
 
 hideVideoCall();
