@@ -125,6 +125,13 @@ const webrtc = new RTCPeerConnection({
   ],
 });
 
+webrtc.onaddstream = (e) => {
+  console.log('onaddstream,e', e);
+  const remoteVideo = document.getElementById("remote-video");
+  // fix android webview v62 track事件不会触发导致不能播放的问题
+  remoteVideo.srcObject = event.stream;
+}
+
 webrtc.addEventListener("icecandidate", (event) => {
   if (!event.candidate) {
     return;
@@ -140,7 +147,9 @@ webrtc.addEventListener("icecandidate", (event) => {
 
 webrtc.addEventListener("track", (event) => {
   /** @type {HTMLVideoElement} */
+  console.log("track,event", event);
   const remoteVideo = document.getElementById("remote-video");
+  if (remoteVideo.srcObject) return;
   remoteVideo.srcObject = event.streams[0];
 });
 
