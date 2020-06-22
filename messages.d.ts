@@ -1,35 +1,46 @@
 interface LoginWebSocketMessage {
-  channel: "login";
+  action: "login";
   name: string;
+  deviceId: string;
+  data: any;
+}
+
+interface LogoutWebSocketMessage {
+  action: "logout";
+  deviceId: string;
+  data: any;
 }
 
 interface StartCallWebSocketMessage {
-  channel: "start_call";
-  otherPerson: string;
+  action: "projectScreen";
+  deviceId: string;
+  data: any;
 }
 
 interface WebRTCIceCandidateWebSocketMessage {
-  channel: "webrtc_ice_candidate";
-  candidate: RTCIceCandidate;
-  otherPerson: string;
+  action: "iceCandidate";
+  deviceId: string;
+  data: any;
 }
 
 interface WebRTCOfferWebSocketMessage {
-  channel: "webrtc_offer";
-  offer: RTCSessionDescription;
-  otherPerson: string;
+  action: "webrtcOffer";
+  deviceId: string;
+  data: any;
 }
 
 interface WebRTCAnswerWebSocketMessage {
-  channel: "webrtc_answer";
-  answer: RTCSessionDescription;
-  otherPerson: string;
+  action: "webrtcAnswer";
+  deviceId: string;
+  data: any;
 }
 
 type WebSocketCallMessage =
-  StartCallWebSocketMessage
+  | StartCallWebSocketMessage
   | WebRTCIceCandidateWebSocketMessage
   | WebRTCOfferWebSocketMessage
   | WebRTCAnswerWebSocketMessage;
 
-type WebSocketMessage = LoginWebSocketMessage | WebSocketCallMessage;
+type UserVisitMessage = LoginWebSocketMessage | WebSocketCallMessage;
+
+type WebSocketMessage = UserVisitMessage | LogoutWebSocketMessage;

@@ -71,7 +71,7 @@ socket.addEventListener("message", (event) => {
  */
 async function handleMessage(message) {
   switch (message.channel) {
-    case "start_call":
+    case "projectScreen":
       console.log(`receiving call from ${message.with}`);
       otherPerson = message.otherPerson;
       showVideoCall();
@@ -79,18 +79,18 @@ async function handleMessage(message) {
       const offer = await webrtc.createOffer();
       await webrtc.setLocalDescription(offer);
       sendMessageToSignallingServer({
-        channel: "webrtc_offer",
+        channel: "webrtcOffer",
         offer,
         otherPerson,
       });
       break;
 
-    case "webrtc_ice_candidate":
+    case "iceCandidate":
       console.log("received ice candidate");
       await webrtc.addIceCandidate(message.candidate);
       break;
 
-    case "webrtc_offer":
+    case "webrtcOffer":
       console.log("received webrtc offer");
       await webrtc.setRemoteDescription(message.offer);
 
@@ -98,13 +98,13 @@ async function handleMessage(message) {
       await webrtc.setLocalDescription(answer);
 
       sendMessageToSignallingServer({
-        channel: "webrtc_answer",
+        channel: "webrtcAnswer",
         answer,
         otherPerson,
       });
       break;
 
-    case "webrtc_answer":
+    case "webrtcAnswer":
       console.log("received webrtc answer");
       await webrtc.setRemoteDescription(message.answer);
       break;
@@ -130,7 +130,7 @@ webrtc.addEventListener("icecandidate", (event) => {
     return;
   }
   sendMessageToSignallingServer({
-    channel: "webrtc_ice_candidate",
+    channel: "iceCandidate",
     candidate: event.candidate,
     otherPerson,
   });
@@ -160,7 +160,7 @@ callButton.addEventListener("click", async () => {
 
   showVideoCall();
   sendMessageToSignallingServer({
-    channel: "start_call",
+    channel: "projectScreen",
     otherPerson,
   });
 });

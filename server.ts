@@ -9,6 +9,8 @@ import { createServer } from "http";
 interface User {
   socket: WebSocket;
   name: string;
+  deviceId: string;
+  customId?: string;
 }
 
 // we'll keep a list of our connected users, as we need to send them messages later
@@ -35,17 +37,19 @@ function findUserByName(name: string): User | undefined {
  * @param sender The person originally sending this message
  * @param message The received message
  */
-function forwardMessageToOtherPerson(sender: User, message: WebSocketCallMessage): void {
-  const receiver = findUserByName(message.otherPerson);
+function forwardMessageToOtherPerson(
+  sender: User,
+  message: WebSocketCallMessage
+): void {
+  const receiver = findUserByName(message.data.calledId);
   if (!receiver) {
     // in case this user doesn't exist, don't do anything
     return;
   }
 
-  const json = JSON.stringify({
-    ...message,
-    otherPerson: sender.name,
-  });
+  const msg = message;
+  msg.data.calledId = sender.name;
+  const json = JSON.stringify(msg);
 
   receiver.socket.send(json);
 }
@@ -59,34 +63,50 @@ function handleMessage(socket: WebSocket, message: WebSocketMessage): void {
   const sender = findUserBySocket(socket) || {
     name: "[unknown]",
     socket,
+    deviceId: "",
+    customId: "",
   };
 
-  switch (message.channel) {
+  switch (message.action) {
     case "login":
       console.log(`${message.name} joined`);
-      connectedUsers.push({ socket, name: message.name });
+      const {
+        deviceId,
+        data: { customId },
+      } = message;
+      connectedUsers.push({
+        socket,
+        name: message.name || deviceId,
+        deviceId,
+        customId: customId || "",
+      });
       break;
 
-    case "start_call":
-      console.log(`${sender.name} started a call with ${message.otherPerson}`);
+    case "projectScreen":
+      console.log(
+        `${sender.name} started a projectScreen with ${message.data.calledId}`
+      );
+      //  todo:以后calledId可能是数组，前置处理，for循环
       forwardMessageToOtherPerson(sender, message);
       break;
 
-    case "webrtc_ice_candidate":
+    case "iceCandidate":
       console.log(`received ice candidate from ${sender.name}`);
       forwardMessageToOtherPerson(sender, message);
       break;
 
-    case "webrtc_offer":
+    case "webrtcOffer":
       console.log(`received offer from ${sender.name}`);
       forwardMessageToOtherPerson(sender, message);
       break;
 
-    case "webrtc_answer":
+    case "webrtcAnswer":
       console.log(`received answer from ${sender.name}`);
       forwardMessageToOtherPerson(sender, message);
       break;
-
+    case "logout":
+      // todo: 预留
+      break;
     default:
       console.log("unknown message", message);
       break;

@@ -38,10 +38,10 @@ function showVideoCall() {
 /** @type {string} */
 let otherPerson;
 
-const username = 'student001'; // prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
+const username = "student001"; // prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
 const socketUrl = `wss://${location.host}/ws`;
 const socket = new WebSocket(socketUrl);
-
+const customId = "c00001";
 /**
  * Sends the message over the socket.
  * @param {WebSocketMessage} message The message to send
@@ -55,8 +55,12 @@ function sendMessageToSignallingServer(message) {
 socket.addEventListener("open", () => {
   console.log("websocket connected");
   sendMessageToSignallingServer({
-    channel: "login",
+    action: "login",
     name: username,
+    deviceId: username,
+    data: {
+      customId,
+    },
   });
 });
 
@@ -70,44 +74,34 @@ socket.addEventListener("message", (event) => {
  * @param {WebSocketMessage} message The incoming message
  */
 async function handleMessage(message) {
-  switch (message.channel) {
-    case "start_call":
-      console.log(`receiving call from ${message.with}`);
-      otherPerson = message.otherPerson;
+  switch (message.action) {
+    case "projectScreen":
+      console.log(`receiving call from ${message.data.calledId}`);
+      otherPerson = message.data.calledId;
       showVideoCall();
-      startShareScreen(async()=>{
+      startShareScreen(async () => {
         const offer = await webrtc.createOffer();
         await webrtc.setLocalDescription(offer);
         sendMessageToSignallingServer({
-          channel: "webrtc_offer",
-          offer,
-          otherPerson,
+          action: "webrtcOffer",
+          deviceId: username,
+          data: {
+            customId,
+            calledId: otherPerson,
+            offer
+          },
         });
       });
       break;
 
-    case "webrtc_ice_candidate":
-      console.log("received ice candidate");
-      await webrtc.addIceCandidate(message.candidate);
+    case "iceCandidate":
+      console.log("received ice candidate", message.data.candidate);
+      await webrtc.addIceCandidate(message.data.candidate);
       break;
 
-    case "webrtc_offer":
-      console.log("received webrtc offer");
-      await webrtc.setRemoteDescription(message.offer);
-
-      const answer = await webrtc.createAnswer();
-      await webrtc.setLocalDescription(answer);
-
-      sendMessageToSignallingServer({
-        channel: "webrtc_answer",
-        answer,
-        otherPerson,
-      });
-      break;
-
-    case "webrtc_answer":
+    case "webrtcAnswer":
       console.log("received webrtc answer");
-      await webrtc.setRemoteDescription(message.answer);
+      await webrtc.setRemoteDescription(message.data.answer);
       break;
 
     default:
@@ -119,9 +113,7 @@ async function handleMessage(message) {
 const webrtc = new RTCPeerConnection({
   iceServers: [
     {
-      urls: [
-        "stun:stun.stunprotocol.org",
-      ],
+      urls: ["stun:stun.stunprotocol.org"],
     },
   ],
 });
@@ -131,37 +123,40 @@ webrtc.addEventListener("icecandidate", (event) => {
     return;
   }
   sendMessageToSignallingServer({
-    channel: "webrtc_ice_candidate",
-    candidate: event.candidate,
-    otherPerson,
+    action: "iceCandidate",
+    deviceId: username,
+    data: {
+      customId,
+      calledId: otherPerson,
+      candidate: event.candidate,
+    },
   });
 });
 
-function startShareScreen(cb){
-  navigator
-  .mediaDevices
-  .getDisplayMedia()
-  .then((localStream) => {
-    /** @type {HTMLVideoElement} */
-    const localVideo = document.getElementById("local-video");
-    localVideo.srcObject = localStream;
+function startShareScreen(cb) {
+  navigator.mediaDevices
+    .getDisplayMedia()
+    .then((localStream) => {
+      /** @type {HTMLVideoElement} */
+      const localVideo = document.getElementById("local-video");
+      localVideo.srcObject = localStream;
 
-    for (const track of localStream.getTracks()) {
-      webrtc.addTrack(track, localStream);
-    }
-    cb&&cb();
-  }).catch(e=>{
-    console.log('user reject share screen')
-  });
+      for (const track of localStream.getTracks()) {
+        webrtc.addTrack(track, localStream);
+      }
+      cb && cb();
+    })
+    .catch((e) => {
+      console.log("user reject share screen");
+    });
 }
-
 
 // callButton.addEventListener("click", async () => {
 //   otherPerson = prompt("Who you gonna call?");
 
 //   showVideoCall();
 //   sendMessageToSignallingServer({
-//     channel: "start_call",
+//     action: "projectScreen",
 //     otherPerson,
 //   });
 // });
