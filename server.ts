@@ -89,7 +89,13 @@ function handleMessage(socket: WebSocket, message: WebSocketMessage): void {
       //  todo:以后calledId可能是数组，前置处理，for循环
       forwardMessageToOtherPerson(sender, message);
       break;
-
+    case "stopProjectScreen":
+      console.log(
+        `${sender.name} stopped a projectScreen with ${message.data.calledId}`
+      );
+      //  todo:以后calledId可能是数组，前置处理，for循环
+      forwardMessageToOtherPerson(sender, message);
+      break;
     case "iceCandidate":
       console.log(`received ice candidate from ${sender.name}`);
       forwardMessageToOtherPerson(sender, message);

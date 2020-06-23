@@ -1,5 +1,6 @@
 /// <reference path="../messages.d.ts" />
-
+import { socketUrl } from "./config.js";
+import TeacherRTCManager from "./TeacherRTCManager.js";
 /**
  * Hides the given element by setting `display: none`.
  * @param {HTMLElement} element The element to hide
@@ -17,6 +18,8 @@ function showElement(element) {
 }
 
 const callButton = document.getElementById("call-button");
+const close0Button = document.getElementById("close0-button");
+const close1Button = document.getElementById("close1-button");
 const videoContainer = document.getElementById("video-container");
 
 /**
@@ -24,14 +27,14 @@ const videoContainer = document.getElementById("video-container");
  */
 function hideVideoCall() {
   hideElement(videoContainer);
-  showElement(callButton);
+  // showElement(callButton);
 }
 
 /**
  * Shows both local and remote video, and hides the "call" button.
  */
 function showVideoCall() {
-  hideElement(callButton);
+  // hideElement(callButton);
   showElement(videoContainer);
 }
 
@@ -39,9 +42,9 @@ function showVideoCall() {
 let otherPerson;
 
 const username = `teacher${Math.floor(Math.random() * 100)}`; // prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
-const socketUrl = `wss://${location.host}/ws`;
 const socket = new WebSocket(socketUrl);
 const customId = "c00001";
+TeacherRTCManager.setUserInfo({ username, customId, socket });
 /**
  * Sends the message over the socket.
  * @param {WebSocketMessage} message The message to send
@@ -74,18 +77,24 @@ socket.addEventListener("message", (event) => {
  * @param {WebSocketMessage} message The incoming message
  */
 async function handleMessage(message) {
+  const { calledId } = message.data;
+  const rtc = TeacherRTCManager.getConnectionByName(calledId);
+  if (!rtc) {
+    console.log(`RTC calledId:${calledId} not found`);
+    return;
+  }
   switch (message.action) {
     case "iceCandidate":
       console.log("received ice candidate", message.data.candidate);
-      await webrtc.addIceCandidate(message.data.candidate);
+      await rtc.addIceCandidate(message.data.candidate);
       break;
 
     case "webrtcOffer":
       console.log("received webrtc offer");
-      await webrtc.setRemoteDescription(message.data.offer);
+      await rtc.setRemoteDescription(message.data.offer);
 
-      const answer = await webrtc.createAnswer();
-      await webrtc.setLocalDescription(answer);
+      const answer = await rtc.createAnswer();
+      await rtc.setLocalDescription(answer);
 
       sendMessageToSignallingServer({
         action: "webrtcAnswer",
@@ -100,7 +109,7 @@ async function handleMessage(message) {
 
     case "webrtcAnswer":
       console.log("received webrtc answer");
-      await webrtc.setRemoteDescription(message.data.answer);
+      await rtc.setRemoteDescription(message.data.answer);
       break;
 
     default:
@@ -109,50 +118,16 @@ async function handleMessage(message) {
   }
 }
 
-const webrtc = new RTCPeerConnection({
-  iceServers: [
-    {
-      urls: ["stun:stun.stunprotocol.org"],
-    },
-  ],
-});
+callButton.addEventListener("click", async () => {
+  otherPerson = prompt("Who you gonna call?", "student001");
 
-webrtc.onaddstream = (e) => {
-  console.log("onaddstream,e", e);
-  const remoteVideo = document.getElementById("remote-video");
-  // fix android webview v62 track事件不会触发导致不能播放的问题
-  remoteVideo.srcObject = event.stream;
-};
-
-webrtc.addEventListener("icecandidate", (event) => {
-  if (!event.candidate) {
+  // showVideoCall();
+  const index = TeacherRTCManager.getEmptyConnectionIndex();
+  console.log("emptyConnectionIndex:", index, TeacherRTCManager);
+  if (index === -1) {
     return;
   }
-  console.log("onIcecandidate", event.candidate);
-  //alert(JSON.stringify(event.candidate));
-  sendMessageToSignallingServer({
-    action: "iceCandidate",
-    deviceId: username,
-    data: {
-      customId,
-      calledId: otherPerson,
-      candidate: event.candidate,
-    },
-  });
-});
-
-webrtc.addEventListener("track", (event) => {
-  console.log("track,event", event);
-  /** @type {HTMLVideoElement} */
-  const remoteVideo = document.getElementById("remote-video");
-  if (remoteVideo.srcObject) return;
-  remoteVideo.srcObject = event.streams[0];
-});
-
-callButton.addEventListener("click", async () => {
-  otherPerson = "student001"; //prompt("Who you gonna call?");
-
-  showVideoCall();
+  TeacherRTCManager.createConnection(otherPerson, index);
   sendMessageToSignallingServer({
     action: "projectScreen",
     deviceId: username,
@@ -163,4 +138,10 @@ callButton.addEventListener("click", async () => {
   });
 });
 
-hideVideoCall();
+close0Button.addEventListener("click", () => {
+  TeacherRTCManager.closeConnectionByIndex(0);
+});
+close1Button.addEventListener("click", () => {
+  TeacherRTCManager.closeConnectionByIndex(1);
+});
+// hideVideoCall();

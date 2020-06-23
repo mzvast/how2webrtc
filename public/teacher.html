@@ -20,6 +20,9 @@
         }
 
         #call-button {
+          position: absolute;
+          top: 5%;
+          left: 50%;
           padding: 1rem 2rem;
           border: none;
           border-radius: 3px;
@@ -36,6 +39,7 @@
 
         #videos {
           position: relative;
+          display: flex;
         }
 
         video {
@@ -44,8 +48,13 @@
           box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.3);
         }
 
-        #remote-video {
-          width: 100%;
+        #remote-video0 {
+          width: 50%;
+          height:50%;
+        }
+        #remote-video1 {
+          width: 50%;
+          height:50%;
         }
 
         #local-video {
@@ -58,14 +67,20 @@
   </head>
   <body>
     <h1>教师端</h1>
-    <button id="call-button" class="centered">投屏student001</button>
+    <button id="call-button">投屏</button>
 
     <div id="video-container" class="centered">
       <div id="videos">
-        <video id="remote-video" autoplay muted playsinline></video>
+        <div>
+          <video id="remote-video0" autoplay muted playsinline></video>
+          <button id="close0-button">close</button>
+        </div>
+        <div>
+          <video id="remote-video1" autoplay muted playsinline></video>
+          <button id="close1-button">close</button>
+        </div>
       </div>
     </div>
-
-    <script type="text/javascript" src="teacher.js"></script>
+    <script type="module" src="teacher.js"></script>
   </body>
 </html>

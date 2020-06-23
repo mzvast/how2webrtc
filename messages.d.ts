@@ -17,6 +17,11 @@ interface StartCallWebSocketMessage {
   data: any;
 }
 
+interface StopCallWebSocketMessage {
+  action: "stopProjectScreen";
+  deviceId: string;
+  data: any;
+}
 interface WebRTCIceCandidateWebSocketMessage {
   action: "iceCandidate";
   deviceId: string;
@@ -37,6 +42,7 @@ interface WebRTCAnswerWebSocketMessage {
 
 type WebSocketCallMessage =
   | StartCallWebSocketMessage
+  | StopCallWebSocketMessage
   | WebRTCIceCandidateWebSocketMessage
   | WebRTCOfferWebSocketMessage
   | WebRTCAnswerWebSocketMessage;

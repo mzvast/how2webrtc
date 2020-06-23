@@ -1,5 +1,5 @@
 /// <reference path="../messages.d.ts" />
-
+import { socketUrl } from "./config.js";
 /**
  * Hides the given element by setting `display: none`.
  * @param {HTMLElement} element The element to hide
@@ -37,11 +37,16 @@ function showVideoCall() {
 
 /** @type {string} */
 let otherPerson;
-
-const username = "student001"; // prompt("What's your name?", `user${Math.floor(Math.random() * 100)}`);
-const socketUrl = `wss://${location.host}/ws`;
+function getUrlSearchName() {
+  const match = location.search.match(/\?name=(\w*)/);
+  return match ? match[1] : null;
+}
+const username = getUrlSearchName()
+  ? getUrlSearchName()
+  : prompt("What's your name?", `student001`);
 const socket = new WebSocket(socketUrl);
 const customId = "c00001";
+console.log("my name is", username);
 /**
  * Sends the message over the socket.
  * @param {WebSocketMessage} message The message to send
@@ -76,7 +81,7 @@ socket.addEventListener("message", (event) => {
 async function handleMessage(message) {
   switch (message.action) {
     case "projectScreen":
-      console.log(`receiving call from ${message.data.calledId}`);
+      console.log(`receiving projectScreen from ${message.data.calledId}`);
       otherPerson = message.data.calledId;
       showVideoCall();
       startShareScreen(async () => {
@@ -88,7 +93,7 @@ async function handleMessage(message) {
           data: {
             customId,
             calledId: otherPerson,
-            offer
+            offer,
           },
         });
       });
@@ -102,6 +107,10 @@ async function handleMessage(message) {
     case "webrtcAnswer":
       console.log("received webrtc answer");
       await webrtc.setRemoteDescription(message.data.answer);
+      break;
+    case "stopProjectScreen":
+      console.log("received stopProjectScreen ");
+      stopShareScreen();
       break;
 
     default:
@@ -149,6 +158,16 @@ function startShareScreen(cb) {
     .catch((e) => {
       console.log("user reject share screen");
     });
+}
+
+function stopShareScreen(cb) {
+  const localVideo = document.getElementById("local-video");
+  const localStream = localVideo.srcObject;
+  for (const track of localStream.getTracks()) {
+    track.stop();
+  }
+  webrtc.close();
+  hideVideoCall();
 }
 
 // callButton.addEventListener("click", async () => {
