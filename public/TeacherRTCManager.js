@@ -30,6 +30,16 @@ class TeacherRTCManager {
         {
           urls: ["stun:stun.stunprotocol.org"],
         },
+        {
+          url: "turn:relay.backups.cz",
+          credential: "webrtc",
+          username: "webrtc",
+        },
+        {
+          url: "turn:relay.backups.cz?transport=tcp",
+          credential: "webrtc",
+          username: "webrtc",
+        },
       ],
     });
     const remoteVideo = document.getElementById("remote-video" + index);
@@ -37,7 +47,7 @@ class TeacherRTCManager {
       // console.log("onaddstream,e", e);
       // fix android webview v62 track事件不会触发导致不能播放的问题
       remoteVideo.srcObject = event.stream;
-      remoteVideo.setAttribute('class', 'active')
+      remoteVideo.setAttribute("class", "active");
     };
 
     webrtc.addEventListener("icecandidate", (event) => {
@@ -87,7 +97,7 @@ class TeacherRTCManager {
     }
     const remoteVideo = document.getElementById("remote-video" + index);
     remoteVideo.srcObject = null;
-    remoteVideo.setAttribute('class', '')
+    remoteVideo.setAttribute("class", "");
     connection.webrtc.close();
     this.sendMessageToSignallingServer({
       action: "stopProjectScreen",

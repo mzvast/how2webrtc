@@ -124,6 +124,16 @@ const webrtc = new RTCPeerConnection({
     {
       urls: ["stun:stun.stunprotocol.org"],
     },
+    {
+      url: "turn:relay.backups.cz",
+      credential: "webrtc",
+      username: "webrtc",
+    },
+    {
+      url: "turn:relay.backups.cz?transport=tcp",
+      credential: "webrtc",
+      username: "webrtc",
+    },
   ],
 });
 
@@ -156,7 +166,7 @@ function startShareScreen(cb) {
       cb && cb();
     })
     .catch((e) => {
-      console.log("user reject share screen");
+      console.log("startShareScreen error", e);
     });
 }
 
@@ -166,7 +176,7 @@ function stopShareScreen(cb) {
   for (const track of localStream.getTracks()) {
     track.stop();
   }
-  webrtc.close();
+  // webrtc.close();
   hideVideoCall();
 }
 

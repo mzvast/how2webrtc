@@ -45,6 +45,7 @@ const username = `teacher${Math.floor(Math.random() * 100)}`; // prompt("What's 
 const socket = new WebSocket(socketUrl);
 const customId = "c00001";
 TeacherRTCManager.setUserInfo({ username, customId, socket });
+console.log("my name is", username);
 /**
  * Sends the message over the socket.
  * @param {WebSocketMessage} message The message to send
@@ -78,6 +79,9 @@ socket.addEventListener("message", (event) => {
  */
 async function handleMessage(message) {
   const { calledId } = message.data;
+  if (!calledId) {
+    return;
+  }
   const rtc = TeacherRTCManager.getConnectionByName(calledId);
   if (!rtc) {
     console.log(`RTC calledId:${calledId} not found`);
