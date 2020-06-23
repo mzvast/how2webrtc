@@ -37,6 +37,7 @@ class TeacherRTCManager {
       // console.log("onaddstream,e", e);
       // fix android webview v62 track事件不会触发导致不能播放的问题
       remoteVideo.srcObject = event.stream;
+      remoteVideo.setAttribute('class', 'active')
     };
 
     webrtc.addEventListener("icecandidate", (event) => {
@@ -86,6 +87,7 @@ class TeacherRTCManager {
     }
     const remoteVideo = document.getElementById("remote-video" + index);
     remoteVideo.srcObject = null;
+    remoteVideo.setAttribute('class', '')
     connection.webrtc.close();
     this.sendMessageToSignallingServer({
       action: "stopProjectScreen",
