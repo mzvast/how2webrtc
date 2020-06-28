@@ -105,7 +105,6 @@ class TeacherRTCManager {
       data: {
         customId: this.customId,
         calledId: this.connections[index].name,
-        candidate: event.candidate,
       },
     });
     this.connections[index] = undefined;
