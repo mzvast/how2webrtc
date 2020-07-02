@@ -1,5 +1,6 @@
 /// <reference path="../messages.d.ts" />
-import { socketUrl } from "./config.js";
+import {socketUrl} from "./config.js";
+import getServerConfig from "./getServerConfig.js"
 /**
  * Hides the given element by setting `display: none`.
  * @param {HTMLElement} element The element to hide
@@ -118,23 +119,10 @@ async function handleMessage(message) {
       break;
   }
 }
-
+const iceServers = getServerConfig();
+console.log('iceServers', iceServers);
 const webrtc = new RTCPeerConnection({
-  iceServers: [
-    {
-      urls: ["stun:stun.stunprotocol.org"],
-    },
-    {
-      url: "turn:relay.backups.cz",
-      credential: "webrtc",
-      username: "webrtc",
-    },
-    {
-      url: "turn:relay.backups.cz?transport=tcp",
-      credential: "webrtc",
-      username: "webrtc",
-    },
-  ],
+  iceServers
 });
 
 webrtc.addEventListener("icecandidate", (event) => {

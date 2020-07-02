@@ -1,3 +1,5 @@
+import getServerConfig from './getServerConfig.js';
+
 class TeacherRTCManager {
   constructor(username) {
     this.username = "";
@@ -9,7 +11,7 @@ class TeacherRTCManager {
     };
   }
 
-  getEmptyConnectionIndex = () => {
+  getEmptyConnectionIndex() {
     if (this.connections[0] === undefined) {
       return 0;
     } else if (this.connections[1] === undefined) {
@@ -19,28 +21,16 @@ class TeacherRTCManager {
     }
   };
 
-  sendMessageToSignallingServer = (message) => {
+  sendMessageToSignallingServer(message) {
     const json = JSON.stringify(message);
     this.socket.send(json);
   };
 
-  createConnection = (name, index) => {
+  createConnection(name, index) {
+    const iceServers = getServerConfig();
+    console.log('iceServers', iceServers);
     const webrtc = new RTCPeerConnection({
-      iceServers: [
-        {
-          urls: ["stun:stun.stunprotocol.org"],
-        },
-        {
-          url: "turn:relay.backups.cz",
-          credential: "webrtc",
-          username: "webrtc",
-        },
-        {
-          url: "turn:relay.backups.cz?transport=tcp",
-          credential: "webrtc",
-          username: "webrtc",
-        },
-      ],
+      iceServers
     });
     const remoteVideo = document.getElementById("remote-video" + index);
     webrtc.onaddstream = (e) => {
@@ -70,7 +60,7 @@ class TeacherRTCManager {
     webrtc.addEventListener("track", (event) => {
       // console.log("track,event", event);
       /** @type {HTMLVideoElement} */
-      if (remoteVideo.srcObject) return;
+      // if (remoteVideo.srcObject) return;
       remoteVideo.srcObject = event.streams[0];
     });
     this.connections[index] = {
@@ -79,7 +69,7 @@ class TeacherRTCManager {
     };
   };
 
-  getConnectionByName = (name) => {
+  getConnectionByName(name) {
     console.log("getConnectionByName,name", this.connections, name);
     for (const key in this.connections) {
       if (this.connections[key] && this.connections[key].name === name) {
@@ -89,7 +79,7 @@ class TeacherRTCManager {
     return undefined;
   };
 
-  closeConnectionByIndex = (index) => {
+  closeConnectionByIndex(index) {
     console.log("closeConnectionByIndex,index", index);
     const connection = this.connections[index];
     if (!connection) {
@@ -110,7 +100,7 @@ class TeacherRTCManager {
     this.connections[index] = undefined;
   };
 
-  setUserInfo = ({ username, customId, socket }) => {
+  setUserInfo({username, customId, socket}) {
     this.username = username;
     this.customId = customId;
     this.socket = socket;

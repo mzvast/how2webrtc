@@ -123,10 +123,11 @@ async function handleMessage(message) {
 }
 
 callButton.addEventListener("click", async () => {
-  otherPerson = prompt(
-    "Who you gonna call?",
-    otherPerson ? otherPerson : "student001"
-  );
+  // otherPerson = prompt(
+  //   "Who you gonna call?",
+  //   otherPerson ? otherPerson : "student001"
+  // );
+  otherPerson = "student001";
 
   // showVideoCall();
   const index = TeacherRTCManager.getEmptyConnectionIndex();
